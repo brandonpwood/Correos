@@ -132,6 +132,7 @@ class Emailer():
         server.close()
 
         return user_list
+
     def scrape_times_with_time(self, month):
         time1 = time.time()
         self.scrape_times(month)
@@ -149,4 +150,13 @@ class Emailer():
             for num, cell in enumerate(point):
                 ws.cell(row = row_number, column = num + 1, value = cell)
             row_number += 1
-        wb.save('Dump.xlsx')
+        wb.save('Scraped.xlsx')
+    def check_credentials(self, username, password):
+        ''' Checks to see if credentials are valid.
+        '''
+        try:
+            server = imaplib.IMAP4_SSL('imap.gmail.com')
+            server.login(username, password)
+            return True
+        except:
+            return False

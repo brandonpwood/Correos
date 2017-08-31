@@ -1,9 +1,10 @@
 from tkinter import *
 from intern.intern import Intern
+# from PIL import Image, ImageTK
 
 class App(Tk):
     def greetings(self):
-        ''' Test button clicks.
+        ''' Test function.
         '''
         print('mic check, 1, 2, and three')
 
@@ -28,7 +29,6 @@ class App(Tk):
         Button(item, text = 'x', command = lambda: self.remove_attribute(text, item)).pack(side = LEFT)
         item.pack()
 
-
     def add_attribute(self, auto, attribute):
         self.labels.append(attribute)
         item = Frame(auto)
@@ -45,16 +45,36 @@ class App(Tk):
         self.intern.dump_fields(self.labels, data)
 
     def login(self, login_pannel, un, pw):
+        ''' Check users credentials and load login response into frame.
+        '''
         self.intern.assign_account(un, pw)
         self.login_status = True
-        Label(login_pannel, text = "Logged in!").grid(row = 0, column = 1)
+
+        if self.intern.check_credentials(un, pw):
+            Label(login_pannel, text = "Logged in!").grid(row = 0, column = 1)
+        else:
+            Label(login_pannel, text = "Try again!").grid(row = 0, column = 1)            
+
+    def blind_run(self, template, tracker, invoice, month, date):
+        ''' Generates invoice for a particular month.
+        '''
+        self.intern.blind_run( template, tracker, invoice, month, date, self.intern.email, self.intern.password)
+
 
     def load_home_frame(self):
         self.clear_view()
         home = Frame(self)
-        Label(home, text = "Welcome! I promise I'll add something interesting here eventually.").grid(row = 1, column = 1)
+        Label(home, text = "Welcome! Login above to run payroll or scrape emails.").grid(row = 1, column = 1)
+
+        # image = Image.open("GIBC.jpg")
+        # photo = ImageTk.PhotoImage(image)        
+        # label = Label(home, image = photo)
+        # label.image = photo
+        # label.grid(row = 0, column = 1)
 
         home.grid(row = 0, column = 0)
+        # Button(self, text = 'TEST', command = lambda: print(self.intern.check_credentials('intelligence@gibcdigital.com', 'virginia97')) ).grid(row = 5, column = 12)
+
         self.active = home
 
     def load_login_frame(self):
@@ -76,13 +96,13 @@ class App(Tk):
 
         self.active = login_pannel
 
-    def load_automation_frame(self):
-        ''' Load frame with automation functionalities.
+    def load_scraping_frame(self):
+        ''' Load frame with scraping functionalities.
         '''
         auto = Frame(self)
         self.clear_view()
 
-        if self.login_status:
+        if self.intern.check_credentials(self.intern.email, self.intern.password):
             Label(auto, text = "You're logged in!").pack()
 
         cmd = Frame(auto)
@@ -100,22 +120,59 @@ class App(Tk):
         holder.pack(side = LEFT)
         subjectivo.pack()
 
+        
         bang = Frame(auto)
-        Button(bang, text = "Scrape", command = lambda: self.get_data()).pack()
         bang.pack()
 
         for label in self.labels:
             self.add_attribute_label(auto, label)
 
+        Button(auto, text = "Scrape!", command = self.get_data).pack()
+
         auto.pack()
         self.active = auto
+
+    def load_automation_frame(self):
+        ''' Load frame for running full-cycle automation.
+        '''
+        self.clear_view()
+        auto_frame = Frame(self)
+
+        # ADD INPUTS AND BUTTON TO RUN BLIND_RUN AND EVERY OTHER RUN CYCLE
+        template = Entry(auto_frame, text = "template")
+        tracker = Entry(auto_frame, text = "tracker")
+        invoice = Entry(auto_frame, text = "invoice")
+        month = Entry(auto_frame, text = "month")
+        date = Entry(auto_frame, text = "date")
+
+        blam = Button(auto_frame, text = "Blind_Run", command = lambda: self.blind_run(template.get(), tracker.get(), invoice.get(), month.get(), date.get()))
+
+        Label(auto_frame, text = "template").grid(row = 1, column = 0) 
+        template.grid(row = 1, column = 1) 
+
+        Label(auto_frame, text = "tracker").grid(row = 2, column = 0)
+        tracker.grid(row = 2, column = 1)
+
+        Label(auto_frame, text = "invoice").grid(row = 3, column = 0)
+        invoice.grid(row = 3, column = 1)
+
+        Label(auto_frame, text = "month").grid(row = 4, column = 0) 
+        month.grid(row = 4, column = 1) 
+
+        Label(auto_frame, text = "date").grid(row = 5, column = 0)
+        date.grid(row = 5, column = 1)
+        
+        blam.grid(row = 6, column = 1)
+
+        auto_frame.pack()
+        self.active = auto_frame
 
     def run(self):
         '''Open and run app.
         '''
         # Initialize object.
         self.iconbitmap('favicon.ico')
-        self.wm_title(' GIBC Digital Automation Suite')
+        self.wm_title('GIBC Digital Automation Suite')
         self.minsize(width = 100, height = 100)
         self.init_intern()
         self.load_home_frame()
@@ -127,10 +184,10 @@ class App(Tk):
 
         # Initialize main menu
         MainMenu = Menu(self)
+        MainMenu.add_command(label = 'Scraping', command = self.load_scraping_frame)
         MainMenu.add_command(label = 'Automation', command = self.load_automation_frame)
         MainMenu.add_command(label = 'Home', command = self.load_home_frame)
         MainMenu.add_command(label = 'Login', command = self.load_login_frame)
-
 
         self.config(menu = MainMenu)
         self.mainloop()
